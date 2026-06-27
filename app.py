@@ -5,8 +5,8 @@ import pandas as pd
 st.set_page_config(
     page_title="YouTube Analytics Dashboard",
     page_icon="📊",
-    layout="wide"
-)
+    layout="wide" )
+
 
 # Judul
 st.title("📊 YouTube Analytics Dashboard")
