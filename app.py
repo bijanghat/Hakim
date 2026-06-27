@@ -1,42 +1,64 @@
 import streamlit as st
-import random
+import pandas as pd
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Flappy Bird")
+st.set_page_config(
+    page_title="YouTube Analytics Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
 
-if "bird_y" not in st.session_state:
-    st.session_state.bird_y = 5
-    st.session_state.score = 0
-    st.session_state.pipe_gap = random.randint(2, 8)
+st.title("📊 YouTube Analytics Dashboard")
 
-st.title("🐦 Flappy Bird Mini")
+# Load dataset
+@st.cache_data
+def load_data():
+    return pd.read_csv("youtube_analytics_dataset.csv")
 
-if st.button("FLAP"):
-    st.session_state.bird_y -= 1
+df = load_data()
 
-st.session_state.bird_y += 1
+st.subheader("Dataset")
+st.dataframe(df, use_container_width=True)
 
-bird_y = st.session_state.bird_y
-pipe_gap = st.session_state.pipe_gap
+st.subheader("Informasi Dataset")
+col1, col2 = st.columns(2)
 
-board = []
+with col1:
+    st.metric("Jumlah Baris", df.shape[0])
 
-for i in range(10):
-    row = ""
-    for j in range(20):
-        if j == 15 and not (pipe_gap <= i <= pipe_gap + 2):
-            row += "🟩"
-        elif i == bird_y and j == 5:
-            row += "🐦"
-        else:
-            row += "⬜"
-    board.append(row)
+with col2:
+    st.metric("Jumlah Kolom", df.shape[1])
 
-for row in board:
-    st.text(row)
+st.subheader("Statistik Deskriptif")
+st.write(df.describe())
 
-if bird_y < 0 or bird_y > 9:
-    st.error("Game Over!")
-    st.session_state.bird_y = 5
-    st.session_state.score = 0
+st.subheader("Missing Values")
+st.write(df.isnull().sum())
 
-st.write("Score:", st.session_state.score)
+numeric_columns = df.select_dtypes(include="number").columns
+
+if len(numeric_columns) > 0:
+    st.subheader("Visualisasi")
+
+    selected_column = st.selectbox(
+        "Pilih kolom numerik",
+        numeric_columns
+    )
+
+    fig, ax = plt.subplots(figsize=(8,4))
+    ax.hist(df[selected_column].dropna(), bins=20)
+    ax.set_title(f"Histogram {selected_column}")
+    ax.set_xlabel(selected_column)
+    ax.set_ylabel("Frekuensi")
+
+    st.pyplot(fig)
+
+    st.subheader("Boxplot")
+
+    fig2, ax2 = plt.subplots(figsize=(8,2))
+    ax2.boxplot(df[selected_column].dropna(), vert=False)
+    ax2.set_title(selected_column)
+
+    st.pyplot(fig2)
+
+st.success("Dashboard berhasil dimuat.")
