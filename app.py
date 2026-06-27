@@ -1,100 +1,64 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# Konfigurasi halaman
 st.set_page_config(
     page_title="YouTube Analytics Dashboard",
     page_icon="📊",
     layout="wide"
 )
 
-# Judul
 st.title("📊 YouTube Analytics Dashboard")
-st.markdown("Dashboard sederhana untuk analisis dataset YouTube.")
 
-# Membaca dataset
+# Load dataset
 @st.cache_data
 def load_data():
     return pd.read_csv("youtube_analytics_dataset.csv")
 
-try:
-    df = load_data()
+df = load_data()
 
-    st.success("✅ Dataset berhasil dimuat!")
+st.subheader("Dataset")
+st.dataframe(df, use_container_width=True)
 
-    # ==========================
-    # KPI
-    # ==========================
-    col1, col2, col3 = st.columns(3)
+st.subheader("Informasi Dataset")
+col1, col2 = st.columns(2)
 
-    with col1:
-        st.metric("📄 Total Data", len(df))
+with col1:
+    st.metric("Jumlah Baris", df.shape[0])
 
-    with col2:
-        st.metric("📊 Jumlah Kolom", len(df.columns))
+with col2:
+    st.metric("Jumlah Kolom", df.shape[1])
 
-    with col3:
-        st.metric("❗ Missing Value", int(df.isnull().sum().sum()))
+st.subheader("Statistik Deskriptif")
+st.write(df.describe())
 
-    st.divider()
+st.subheader("Missing Values")
+st.write(df.isnull().sum())
 
-    # ==========================
-    # Search
-    # ==========================
-    st.subheader("🔍 Pencarian Data")
+numeric_columns = df.select_dtypes(include="number").columns
 
-    keyword = st.text_input("Masukkan kata kunci")
+if len(numeric_columns) > 0:
+    st.subheader("Visualisasi")
 
-    if keyword:
-        hasil = df[df.astype(str).apply(
-            lambda x: x.str.contains(keyword, case=False)
-        ).any(axis=1)]
-        st.dataframe(hasil, use_container_width=True)
-    else:
-        st.subheader("📋 Dataset")
-        st.dataframe(df, use_container_width=True)
-
-    st.divider()
-
-    # ==========================
-    # Statistik
-    # ==========================
-    st.subheader("📈 Statistik Deskriptif")
-    st.dataframe(df.describe())
-
-    st.divider()
-
-    # ==========================
-    # Grafik
-    # ==========================
-    numeric_columns = df.select_dtypes(include="number").columns
-
-    if len(numeric_columns) > 0:
-        column = st.selectbox(
-            "Pilih Kolom Numerik",
-            numeric_columns
-        )
-
-        st.subheader(f"📊 Grafik {column}")
-        st.line_chart(df[column])
-
-    st.divider()
-
-    # ==========================
-    # Download
-    # ==========================
-    st.subheader("📥 Download Dataset")
-
-    csv = df.to_csv(index=False).encode("utf-8")
-
-    st.download_button(
-        label="Download CSV",
-        data=csv,
-        file_name="youtube_analytics_dataset.csv",
-        mime="text/csv"
+    selected_column = st.selectbox(
+        "Pilih kolom numerik",
+        numeric_columns
     )
 
-except FileNotFoundError:
-    st.error("❌ File youtube_analytics_dataset.csv tidak ditemukan.")
-except Exception as e:
-    st.error(f"Terjadi kesalahan: {e}")
+    fig, ax = plt.subplots(figsize=(8,4))
+    ax.hist(df[selected_column].dropna(), bins=20)
+    ax.set_title(f"Histogram {selected_column}")
+    ax.set_xlabel(selected_column)
+    ax.set_ylabel("Frekuensi")
+
+    st.pyplot(fig)
+
+    st.subheader("Boxplot")
+
+    fig2, ax2 = plt.subplots(figsize=(8,2))
+    ax2.boxplot(df[selected_column].dropna(), vert=False)
+    ax2.set_title(selected_column)
+
+    st.pyplot(fig2)
+
+st.success("Dashboard berhasil dimuat.")
