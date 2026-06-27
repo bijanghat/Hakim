@@ -5,8 +5,8 @@ import pandas as pd
 st.set_page_config(
     page_title="YouTube Analytics Dashboard",
     page_icon="📊",
-    layout="wide" )
-
+    layout="wide"
+)
 
 # Judul
 st.title("📊 YouTube Analytics Dashboard")
@@ -89,4 +89,12 @@ try:
 
     st.download_button(
         label="Download CSV",
-        data=
+        data=csv,
+        file_name="youtube_analytics_dataset.csv",
+        mime="text/csv"
+    )
+
+except FileNotFoundError:
+    st.error("❌ File youtube_analytics_dataset.csv tidak ditemukan.")
+except Exception as e:
+    st.error(f"Terjadi kesalahan: {e}")
